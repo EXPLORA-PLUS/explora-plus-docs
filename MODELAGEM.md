@@ -69,10 +69,11 @@ erDiagram
         bigint id PK
         bigint user_id FK
         bigint place_id FK
+        string code UK "ex: EXP-7821-CTH"
         int quantity
         int total_cents
         string currency
-        string status "reserved|paid|cancelled|used"
+        string status "valid|used|expired"
         datetime purchased_at
         datetime used_at "null se não usado"
     }
@@ -87,7 +88,7 @@ erDiagram
 | **Place** | unidade central do app. Contém localização PostGIS, conteúdo (PT), preço, e *opcionalmente* janela temporal pra eventos (`event_start_at` / `event_end_at` nullable — assim "evento" é só um Place com data) |
 | **PlaceImage** | a tela Detalhe tem carousel de N imagens |
 | **Route** | "Rota Inteligente" salva: origem, destino, modal, polyline, duração, distância |
-| **Ticket** | aba Ingressos: histórico de compras com status |
+| **Ticket** | aba Ingressos: histórico de compras com status e código de validação |
 
 ### Decisões já tomadas (MVP)
 
@@ -97,6 +98,7 @@ erDiagram
 - **Sem Favorite, sem UserProfile**: cortados do MVP
 - **Sem PlaceTranslation**: cortado junto com i18n
 - **Polyline na Route**: campo `text` (encoded polyline) — mais barato de armazenar e o frontend decoda
+- **Ticket sem fluxo de pagamento**: estados simples `valid|used|expired` (compra mockada cria já como `valid`; pagamento real fica pro pós-MVP)
 
 ---
 
@@ -110,14 +112,13 @@ flowchart LR
     Turista((Turista))
     Admin((Administrador))
 
+    Turista -.->|estende| Visitante
+
     Visitante --> UC1[Buscar lugares]
     Visitante --> UC2[Filtrar por categoria]
     Visitante --> UC3[Ver detalhes do lugar]
     Visitante --> UC4[Criar conta / Login]
 
-    Turista --> UC1
-    Turista --> UC2
-    Turista --> UC3
     Turista --> UC5[Gerar rota inteligente]
     Turista --> UC6[Escolher modo de transporte]
     Turista --> UC7[Iniciar navegação]
@@ -131,6 +132,8 @@ flowchart LR
     Admin --> UC14[Gerenciar categorias]
     Admin --> UC15[Visualizar rotas e ingressos]
 ```
+
+> Turista **estende** Visitante: herda todos os casos de uso de Visitante (UC1–UC4) e adiciona os próprios.
 
 ### Classes
 
@@ -165,6 +168,8 @@ classDiagram
         +DateTime eventStartAt
         +DateTime eventEndAt
         +bool isActive
+        +DateTime createdAt
+        +DateTime updatedAt
         +distanceTo(point) float
         +isEvent() bool
         +isFree() bool
@@ -190,6 +195,7 @@ classDiagram
 
     class Ticket {
         +Long id
+        +String code
         +int quantity
         +int totalCents
         +String currency
@@ -197,7 +203,7 @@ classDiagram
         +DateTime purchasedAt
         +DateTime usedAt
         +markAsUsed() void
-        +cancel() void
+        +expire() void
         +isValid() bool
     }
 
@@ -213,12 +219,14 @@ classDiagram
 
 ```mermaid
 flowchart TB
+    AdminUser((Admin))
+
     subgraph Mobile["Aplicativo Móvel (React Native + Expo)"]
         UI[Telas / UI]
         Nav[Navegação]
         State[Estado local]
         APIClient[Cliente HTTP]
-        MapView[Mapa / Leaflet]
+        MapView[MapView<br/>RN]
         UI --> Nav
         UI --> State
         State --> APIClient
@@ -243,6 +251,8 @@ flowchart TB
     APIClient -->|HTTPS / JSON| RoutesAPI
     APIClient -->|HTTPS / JSON| TicketsAPI
     MapView -->|HTTPS| OSM
+
+    AdminUser -->|HTTPS / Browser| AdminUI
 
     AuthAPI --> DB
     PlacesAPI --> DB
@@ -298,7 +308,7 @@ sequenceDiagram
     DB-->>API: Place(location, name)
     API->>ORS: POST /v2/directions/{mode}
     ORS-->>API: {polyline, distance, duration}
-    API->>DB: INSERT INTO route (...)
+    API->>DB: INSERT INTO route (user_id, destination_place_id, origin, transport_mode, polyline, distance_m, duration_s)
     DB-->>API: Route(id)
     API-->>App: 201 Created {route}
     App->>App: Decodifica polyline
@@ -325,7 +335,8 @@ sequenceDiagram
     App-->>T: Mostra modal de confirmação
     T->>App: Confirma quantidade
     App->>API: POST /api/tickets/ {placeId, quantity}
-    API->>DB: INSERT INTO ticket (status='reserved')
+    API->>API: Gera code único (ex: EXP-7821-CTH)
+    API->>DB: INSERT INTO ticket (user_id, place_id, code, quantity, total_cents, status='valid')
     DB-->>API: Ticket(id, code)
     API-->>App: 201 Created {ticket}
     App-->>T: Exibe na aba Ingressos
@@ -347,24 +358,20 @@ flowchart TD
     Apply --> Tap[Tocar em um pin]
     Tap --> Detail[Ver tela de detalhe]
     Detail --> Decide{Gerar rota?}
-    Decide -->|Não| End([Fim])
+    Decide -->|Não| Fim([Fim])
     Decide -->|Sim| Route[Tela Rota Inteligente]
     Route --> ChooseMode[Escolher modal]
     ChooseMode --> StartNav[Iniciar navegação]
-    StartNav --> End
+    StartNav --> Fim
 ```
 
 ### Estados — Ciclo do Ticket
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Reservado : turista compra
-    Reservado --> Pago : confirmação de pagamento
-    Reservado --> Cancelado : turista desiste
-    Pago --> Utilizado : check-in no local
-    Pago --> Expirado : passou da data
-    Pago --> Cancelado : cancelamento permitido
-    Cancelado --> [*]
+    [*] --> Válido : turista compra
+    Válido --> Utilizado : check-in no local
+    Válido --> Expirado : passou da data do evento
     Utilizado --> [*]
     Expirado --> [*]
 ```
