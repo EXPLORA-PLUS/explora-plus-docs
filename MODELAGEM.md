@@ -335,7 +335,7 @@ sequenceDiagram
     App-->>T: Mostra modal de confirmação
     T->>App: Confirma quantidade
     App->>API: POST /api/tickets/ {placeId, quantity}
-    API->>API: Gera code único (ex: EXP-7821-CTH)
+    API->>API: Gera code único (ex. EXP-7821-CTH)
     API->>DB: INSERT INTO ticket (user_id, place_id, code, quantity, total_cents, status='valid')
     DB-->>API: Ticket(id, code)
     API-->>App: 201 Created {ticket}
