@@ -211,7 +211,7 @@
         <OBJECT>
           <ID name="" mc="Infrastructure.Note" uid="c1a12647-496f-488f-a7ea-1dec4bf5135f"/>
           <ATTRIBUTES>
-            <ATT name="Content"></ATT>
+            <ATT name="Content"><![CDATA[UserRouteSearchPreference foi adicionado ao dominio para guardar includeCulture, includePark, includeFood, poiSpacingM e maxSearchRadiusM. A configuracao e persistida por usuario autenticado e afeta apenas a proxima geracao de rota e a chave de cache correspondente.]]></ATT>
             <ATT name="MimeType"><![CDATA[text/plain]]></ATT>
             <ATT name="Name"></ATT>
             <ATT name="status">1970354901745664</ATT>

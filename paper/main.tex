@@ -128,7 +128,7 @@ O Explora+ oferece um planejador de rotas tur\'isticas que:
   \item Calcula automaticamente um percurso pedestre entre dois pontos;
   \item Identifica pontos de interesse (POIs) pr\'oximos ao trajeto via dados abertos do OpenStreetMap;
   \item Enriquece os detalhes de cada POI com imagens e resumos buscados no Wikidata e Wikipedia;
-  \item Permite ao usu\'ario marcar lugares como visitados, excluir paradas e manter uma biblioteca pessoal de lugares.
+  \item Permite ao usu\'ario marcar lugares como visitados, excluir paradas, manter uma biblioteca pessoal de lugares e configurar como a pr\'oxima busca de rota deve ser feita.
 \end{itemize}
 
 \subsection{Stakeholder externo}
@@ -231,9 +231,10 @@ O ambiente de desenvolvimento usa Docker Compose com tr\^es containers: \texttt{
 O modelo de dados evoluiu significativamente em rela\c{c}\~ao \`a proposta inicial. A entidade \texttt{Route} de destino \'unico foi substitu\'ida por um conjunto de entidades que suportam rotas multi-POI e personaliza\c{c}\~ao por usu\'ario:
 
 \begin{itemize}
+  \item \textbf{UserRouteSearchPreference}: prefer\^encias persistidas do planner por usu\'ario autenticado. Controla categorias habilitadas, dist\^ancia alvo entre POIs e raio m\'aximo de elegibilidade.
   \item \textbf{Place}: fonte \'unica de verdade de um POI. Campo \texttt{source\_ref} \'e o identificador p\'ublico (\texttt{stop\_id} no contrato HTTP). Campo \texttt{detail\_status} controla o ciclo de enriquecimento progressivo.
   \item \textbf{UserPlaceState}: estado global do usu\'ario em rela\c{c}\~ao a um lugar (visitado, contagens, \'ultima rota em que apareceu).
-  \item \textbf{RouteSearchCache}: cache de rota calculada por chave can\^onica (origem + destino). Evita recalcular via Nominatim/OSRM/Overpass a cada requisi\c{c}\~ao.
+  \item \textbf{RouteSearchCache}: cache de rota calculada por chave can\^onica (origem + destino + prefer\^encias efetivas). Evita recalcular via Nominatim/OSRM/Overpass a cada requisi\c{c}\~ao.
   \item \textbf{TourRoute}: snapshot relacional da rota personalizada do usu\'ario com geometria LineString PostGIS.
   \item \textbf{TourRouteStop}: cada POI na rota com estado \texttt{active / visited / excluded}.
 \end{itemize}
@@ -254,7 +255,7 @@ O modelo de dados evoluiu significativamente em rela\c{c}\~ao \`a proposta inici
   \caption{Diagrama de casos de uso -- MVP}
 \end{figure}
 
-O MVP define dois atores: \textbf{Visitante} (usu\'ario an\^onimo) e \textbf{Turista} (usu\'ario autenticado, que estende Visitante). O ator Administrador da proposta inicial foi removido do escopo: lugares s\~ao populados via comando \texttt{seed\_demo} e descobertos automaticamente pelo Overpass API.
+O MVP define dois atores: \textbf{Visitante} (usu\'ario an\^onimo) e \textbf{Turista} (usu\'ario autenticado, que estende Visitante). O ator Administrador da proposta inicial foi removido do escopo: lugares s\~ao populados via comando \texttt{seed\_demo} e descobertos automaticamente pelo Overpass API. O ator Turista tamb\'em ganhou o caso de uso \textit{Configurar busca}, permitindo personalizar categorias, dist\^ancia entre POIs e raio m\'aximo para a pr\'oxima rota.
 
 \subsection{Fluxos principais}
 
@@ -266,7 +267,7 @@ O MVP define dois atores: \textbf{Visitante} (usu\'ario an\^onimo) e \textbf{Tur
   \caption{Diagrama de sequ\^encia -- Gerar Rota}
 \end{figure}
 
-O fluxo de gera\c{c}\~ao de rota \'e o n\'ucleo do produto. Ao receber \texttt{POST /api/tour-routes/} com origem e destino, o backend: (1) verifica o cache por chave can\^onica; (2) em caso de miss, geocodifica via Nominatim, calcula rota pedestre via OSRM e busca POIs via Overpass; (3) realiza upsert dos POIs em \texttt{Place}; (4) se o usu\'ario estiver autenticado, persiste \texttt{TourRoute}, \texttt{TourRouteStop} e \texttt{UserPlaceState} \cite{osrm2024, overpass2024}.
+O fluxo de gera\c{c}\~ao de rota \'e o n\'ucleo do produto. Ao receber \texttt{POST /api/tour-routes/} com origem e destino, o backend: (1) carrega as prefer\^encias do usu\'ario autenticado ou usa os defaults do planner; (2) verifica o cache por chave can\^onica sens\'ivel a origem, destino e prefer\^encias efetivas; (3) em caso de miss, geocodifica via Nominatim, calcula rota pedestre via OSRM e busca POIs via Overpass filtrando categorias e raio; (4) aplica a heur\'istica de sele\c{c}\~ao com a dist\^ancia configurada entre paradas; (5) realiza upsert dos POIs em \texttt{Place}; (6) se o usu\'ario estiver autenticado, persiste \texttt{TourRoute}, \texttt{TourRouteStop} e \texttt{UserPlaceState} \cite{osrm2024, overpass2024}.
 
 \subsubsection{Enriquecimento de Detalhe de POI}
 
@@ -312,13 +313,14 @@ Autentica\c{c}\~ao JWT & Registro, login, refresh de token e logout \\
 Planejamento de rota & Origem + destino com POIs selecionados ao longo do percurso \\
 Mapa interativo & Leaflet via WebView/iframe com polyline, marcadores e filtros \\
 Filtros de categoria & Cultura, Parques, Comida \\
+Configuracoes de busca & Tela dedicada no perfil para alterar categorias, distancia entre POIs e raio maximo da proxima busca \\
 Detalhe de POI & Modal com imagem, resumo, endere\c{c}o, hor\'arios, website \\
 Enriquecimento autom\'atico & Imagem e resumo via Wikidata/Wikipedia \\
 Marcar visitado & POI sai do trajeto ativo e vai para se\c{c}\~ao ``J\'a visitados'' \\
 Excluir POI da rota & Rota recalculada sem o POI exclu\'ido \\
 Biblioteca pessoal & Aba Lugares com hist\'orico de todos os POIs vistos em rotas \\
 Perfil b\'asico & Dados do usu\'ario e bot\~ao de logout \\
-Cache de rotas & Rota reutilizada para mesma origem/destino sem recalcular \\
+Cache de rotas & Rota reutilizada para mesma origem/destino e mesmas prefer\^encias sem recalcular \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -343,7 +345,7 @@ As seguintes funcionalidades foram identificadas na proposta inicial, mas n\~ao 
 
 O Explora+ entregou um MVP funcional e coerente que cumpre o objetivo central do projeto: permitir que turistas e moradores descubram e percorram pontos de interesse em Santos com aux\'ilio de um app m\'ovel.
 
-A principal mudan\c{c}a em rela\c{c}\~ao \`a proposta inicial foi a substitui\c{c}\~ao de APIs comerciais por alternativas abertas (Nominatim, OSRM, Overpass, Wikidata, Wikipedia), o que tornou o sistema mais sustent\'avel e independente de cotas e custos. O modelo de dados evoluiu de uma rota \emph{single-destination} para um planner multi-POI com cache, personaliza\c{c}\~ao por usu\'ario e enriquecimento progressivo de conte\'udo.
+A principal mudan\c{c}a em rela\c{c}\~ao \`a proposta inicial foi a substitui\c{c}\~ao de APIs comerciais por alternativas abertas (Nominatim, OSRM, Overpass, Wikidata, Wikipedia), o que tornou o sistema mais sustent\'avel e independente de cotas e custos. O modelo de dados evoluiu de uma rota \emph{single-destination} para um planner multi-POI com cache sens\'ivel a prefer\^encias, personaliza\c{c}\~ao por usu\'ario e enriquecimento progressivo de conte\'udo.
 
 \subsection{Justificativas t\'ecnicas das escolhas}
 

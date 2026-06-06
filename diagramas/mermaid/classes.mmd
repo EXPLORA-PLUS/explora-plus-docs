@@ -8,6 +8,16 @@ classDiagram
         +authenticate(password) bool
     }
 
+    class UserRouteSearchPreference {
+        +Long id
+        +bool includeCulture
+        +bool includePark
+        +bool includeFood
+        +int poiSpacingM
+        +int maxSearchRadiusM
+        +appliesOnNextSearchOnly() bool
+    }
+
     class PlaceCategory {
         +Long id
         +String slug
@@ -59,6 +69,7 @@ classDiagram
     class RouteSearchCache {
         +Long id
         +String cacheKey
+        +dict searchPayload
         +String originQuery
         +String destinationQuery
         +dict routePayload
@@ -89,6 +100,7 @@ classDiagram
         +float distanceFromRouteM
     }
 
+    User "1" --> "1" UserRouteSearchPreference : configura
     User "1" --> "0..*" TourRoute : cria
     User "1" --> "0..*" UserPlaceState : possui
     PlaceCategory "1" --> "0..*" Place : categoriza

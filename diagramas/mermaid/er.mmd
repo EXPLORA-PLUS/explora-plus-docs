@@ -1,4 +1,5 @@
 erDiagram
+    USER ||--|| USER_ROUTE_SEARCH_PREFERENCE : configura
     USER ||--o{ TOUR_ROUTE : cria
     USER ||--o{ USER_PLACE_STATE : possui
 
@@ -19,6 +20,18 @@ erDiagram
         string email UK
         string password_hash
         datetime date_joined
+    }
+
+    USER_ROUTE_SEARCH_PREFERENCE {
+        bigint id PK
+        bigint user_id FK
+        bool include_culture
+        bool include_park
+        bool include_food
+        smallint poi_spacing_m "75 | 100 | 150"
+        smallint max_search_radius_m "150 | 250 | 400"
+        datetime created_at
+        datetime updated_at
     }
 
     PLACE_CATEGORY {
@@ -75,7 +88,7 @@ erDiagram
     ROUTE_SEARCH_CACHE {
         bigint id PK
         string cache_key UK
-        json canonical_payload
+        json search_payload
         string origin_query
         string destination_query
         json route_payload
@@ -113,4 +126,6 @@ erDiagram
         string state "active | visited | excluded"
         string source
         float distance_from_route_m
+        datetime created_at
+        datetime updated_at
     }

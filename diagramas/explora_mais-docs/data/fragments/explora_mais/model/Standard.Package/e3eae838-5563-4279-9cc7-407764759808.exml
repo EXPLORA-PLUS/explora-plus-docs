@@ -16,6 +16,7 @@
       <COMP relation="OwnedElement">
         <COMPID name="Category" mc="Standard.Class" uid="136d25ed-de0e-4227-a072-d1f32bfe04d2"/>
         <COMPID name="Place" mc="Standard.Class" uid="12c7c3ee-651b-408e-be47-3c2c62a274e2"/>
+        <COMPID name="UserRouteSearchPreference" mc="Standard.Class" uid="3f8f7707-1f23-45e2-96da-2f980d33f2c2"/>
       </COMP>
       <COMP relation="Product">
         <COMPID name="Model Class diagram" mc="Standard.ClassDiagram" uid="19646b8b-8e5d-4eda-ae1b-ee8637b01987"/>

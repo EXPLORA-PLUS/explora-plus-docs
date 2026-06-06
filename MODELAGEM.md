@@ -9,6 +9,7 @@
 
 ```mermaid
 erDiagram
+    USER ||--|| USER_ROUTE_SEARCH_PREFERENCE : configura
     USER ||--o{ TOUR_ROUTE : cria
     USER ||--o{ USER_PLACE_STATE : possui
 
@@ -29,6 +30,18 @@ erDiagram
         string email UK
         string password_hash
         datetime date_joined
+    }
+
+    USER_ROUTE_SEARCH_PREFERENCE {
+        bigint id PK
+        bigint user_id FK
+        bool include_culture
+        bool include_park
+        bool include_food
+        smallint poi_spacing_m "75 | 100 | 150"
+        smallint max_search_radius_m "150 | 250 | 400"
+        datetime created_at
+        datetime updated_at
     }
 
     PLACE_CATEGORY {
@@ -85,7 +98,7 @@ erDiagram
     ROUTE_SEARCH_CACHE {
         bigint id PK
         string cache_key UK
-        json canonical_payload
+        json search_payload
         string origin_query
         string destination_query
         json route_payload
@@ -131,11 +144,12 @@ erDiagram
 | Entidade | Papel |
 |---|---|
 | **User** (Django nativo) | autenticacao JWT; dono de rotas e estados de lugares |
+| **UserRouteSearchPreference** | configuracao persistida do planner por usuario: categorias, distancia entre POIs e raio maximo |
 | **PlaceCategory** | taxonomia de POIs: `culture`, `park`, `food` |
 | **Place** | fonte unica de verdade de um ponto de interesse; campo PostGIS `location`; enriquecido progressivamente via APIs externas |
 | **PlaceImage** | galeria de imagens de um lugar (URL, order) |
 | **UserPlaceState** | estado global usuario x lugar: visitado, datas, contagem, ultima rota |
-| **RouteSearchCache** | cache de rota calculada por chave canonica (origem + destino); evita recalculo desnecessario via Nominatim/OSRM/Overpass |
+| **RouteSearchCache** | cache de rota calculada por chave canonica (origem + destino + preferencias efetivas); evita recalculo desnecessario via Nominatim/OSRM/Overpass |
 | **TourRoute** | snapshot relacional da rota personalizada do usuario; geometria LineString PostGIS |
 | **TourRouteStop** | cada POI na rota do usuario com estado `active / visited / excluded` |
 
@@ -143,6 +157,8 @@ erDiagram
 
 - **`source_ref`**: identificador publico do POI (ex: ID OSM). E o `stop_id` no contrato HTTP.
 - **`detail_status`**: controla o ciclo de enriquecimento. `pending` -> busca ao abrir; `complete` -> tem dados; `unavailable` -> APIs nao retornaram nada; `error` -> falha de rede.
+- **`UserRouteSearchPreference`**: preferencias persistidas por usuario autenticado; afetam apenas a proxima chamada de `POST /api/tour-routes/`.
+- **Cache sensivel a preferencias**: a chave do `RouteSearchCache` considera origem, destino e configuracoes efetivas de busca.
 - **Sem tabela de Ticket**: tickets existem como endpoint mockado sem fluxo de compra real no MVP.
 - **Sem modal de transporte**: so caminhada suportada. OSRM opera em modo `foot`.
 - **Sem Administrador no app**: lugares populados via `seed_demo` e descoberta automatica pelo Overpass.
@@ -171,6 +187,7 @@ flowchart LR
     Turista --> UC10[Ver biblioteca pessoal de lugares]
     Turista --> UC11[Ver perfil basico]
     Turista --> UC12[Sair da conta]
+    Turista --> UC13[Configurar busca\ncategorias, distancia e raio]
 ```
 
 > Turista **estende** Visitante: herda UC1-UC4 e adiciona acoes que exigem autenticacao.
@@ -188,6 +205,16 @@ classDiagram
         +String passwordHash
         +DateTime dateJoined
         +authenticate(password) bool
+    }
+
+    class UserRouteSearchPreference {
+        +Long id
+        +bool includeCulture
+        +bool includePark
+        +bool includeFood
+        +int poiSpacingM
+        +int maxSearchRadiusM
+        +appliesOnNextSearchOnly() bool
     }
 
     class PlaceCategory {
@@ -241,6 +268,7 @@ classDiagram
     class RouteSearchCache {
         +Long id
         +String cacheKey
+        +dict searchPayload
         +String originQuery
         +String destinationQuery
         +dict routePayload
@@ -271,6 +299,7 @@ classDiagram
         +float distanceFromRouteM
     }
 
+    User "1" --> "1" UserRouteSearchPreference : configura
     User "1" --> "0..*" TourRoute : cria
     User "1" --> "0..*" UserPlaceState : possui
     PlaceCategory "1" --> "0..*" Place : categoriza
@@ -289,7 +318,7 @@ classDiagram
 ```mermaid
 flowchart TB
     subgraph Frontend["Aplicativo (Expo + React Native)"]
-        Screens[Telas\nExploreScreen / PlacesScreen / ProfileScreen]
+        Screens[Telas\nExploreScreen / PlacesScreen / ProfileScreen / SearchSettingsScreen]
         Auth[AuthContext\nJWT tokens]
         Services[Services\napi.ts / tourRoutes.ts / auth.ts]
         Map[MapView\nLeaflet via WebView/iframe]
@@ -301,7 +330,7 @@ flowchart TB
     subgraph Backend["API Backend (Django 5.1 + DRF)"]
         AuthAPI[accounts\nPOST /api/auth/*\nGET /api/me/]
         PlacesAPI[places\nGET /api/places/*]
-        TourRoutesAPI[tour_routes\nPOST /api/tour-routes/\nGET /api/tour-routes/current/\nGET /api/tour-routes/places/\nGET /api/tour-routes/pois/id/\nPATCH .../stops/id/state/\nDELETE .../stops/id/]
+        TourRoutesAPI[tour_routes\nPOST /api/tour-routes/\nGET/PATCH /api/tour-routes/preferences/\nGET /api/tour-routes/current/\nGET /api/tour-routes/places/\nGET /api/tour-routes/pois/id/\nPATCH .../stops/id/state/\nDELETE .../stops/id/]
         CoreAPI[core\nGET /api/health/]
         TicketsAPI[tickets\nEndpoint mockado]
     end
@@ -325,7 +354,7 @@ flowchart TB
     TourRoutesAPI --> DB
     TourRoutesAPI -->|geocoding| Nominatim
     TourRoutesAPI -->|rota pedestre| OSRM
-    TourRoutesAPI -->|POIs OSM| Overpass
+    TourRoutesAPI -->|POIs OSM filtrados por preferencias| Overpass
     TourRoutesAPI -->|imagem| Wikidata
     TourRoutesAPI -->|resumo e fallback| Wikipedia
 ```
@@ -374,28 +403,36 @@ sequenceDiagram
     actor T as Turista
     participant App as ExploreScreen
     participant API as Backend API
+    participant DB as PostgreSQL
     participant Cache as RouteSearchCache
     participant Nom as Nominatim
     participant OSRM as OSRM
     participant OVP as Overpass API
-    participant DB as PostgreSQL
 
     T->>App: Preenche origem e destino, toca "Gerar Rota"
     App->>API: POST /api/tour-routes/ {origin, destination}
 
-    API->>Cache: Busca por cache_key canonico
+    alt Usuario autenticado
+        API->>DB: Carrega UserRouteSearchPreference
+        DB-->>API: categorias + poi_spacing_m + max_search_radius_m
+    else Usuario anonimo
+        API->>API: Usa defaults do planner
+    end
+
+    API->>Cache: Busca cache_key com origem, destino e preferencias efetivas
     alt Cache valido encontrado
         Cache-->>API: route_payload + map_payload
         API->>DB: Upsert Place para cada POI do cache
-    else Cache miss
+    else Cache miss ou fallback ruim
         API->>Nom: Geocodifica origem e destino
-        Nom-->>API: coordenadas lat/lng
+        Nom-->>API: {lat, lng} para cada ponto
         API->>OSRM: GET /route/v1/foot/{coords}
         OSRM-->>API: polyline + distance_m + duration_s
-        API->>OVP: Busca POIs na bbox da rota
-        OVP-->>API: Lista de nos OSM com tags
+        API->>OVP: Busca POIs com categorias e raio filtrados
+        OVP-->>API: Lista de nos OSM (nome, coord, tags)
+        API->>API: Seleciona POIs com spacing configurado
         API->>DB: Upsert Place para cada POI
-        API->>Cache: INSERT RouteSearchCache
+        API->>Cache: INSERT RouteSearchCache com search_payload, route_payload e map_payload
     end
 
     alt Usuario autenticado
@@ -522,7 +559,13 @@ flowchart TD
     Modal -->|Fechar| CloseModal[Fecha modal]
     CloseModal --> Idle
 
-    Idle -->|Recalcular rota| NewRoute[POST /api/tour-routes/\nnova origem e destino]
+    Idle -->|Abrir perfil| Profile[ProfileScreen]
+    Profile -->|Abrir configuracoes| Settings[GET /api/tour-routes/preferences/]
+    Settings --> Adjust[Alterna categorias\nescolhe distancia e raio]
+    Adjust --> SaveSettings[PATCH /api/tour-routes/preferences/]
+    SaveSettings --> Idle
+
+    Idle -->|Recalcular rota| NewRoute[POST /api/tour-routes/\nusa preferencias salvas]
     NewRoute --> RenderMap
 ```
 
@@ -538,3 +581,27 @@ stateDiagram-v2
     active --> excluded : usuario remove da rota
     excluded --> [*]
 ```
+
+---
+
+## Configuracoes de busca por usuario
+
+O planner agora possui uma camada de configuracao persistida por usuario autenticado.
+
+### Defaults
+
+- categorias habilitadas: `culture`, `park`, `food`
+- distancia entre POIs: `100m`
+- raio maximo de busca: `250m`
+
+### Presets aceitos
+
+- distancia entre POIs: `75m`, `100m`, `150m`
+- raio maximo de busca: `150m`, `250m`, `400m`
+
+### Regras funcionais
+
+- pelo menos uma categoria deve permanecer ativa
+- salvar preferencias nao recalcula a rota atual salva
+- a configuracao entra em vigor apenas na proxima chamada de `POST /api/tour-routes/`
+- o `RouteSearchCache` passa a diferenciar buscas iguais em origem/destino quando as preferencias efetivas mudam

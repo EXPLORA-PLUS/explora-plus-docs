@@ -1,30 +1,43 @@
 flowchart TD
-    Start([Inicio]) --> AuthCheck{Autenticado?}
+    Start([Inicio]) --> OpenApp[Abrir app]
+    OpenApp --> AuthCheck{Sessao\nautenticada?}
 
-    AuthCheck -->|Sim| TryCurrent[GET current route]
-    TryCurrent --> Found{Rota salva?}
-    Found -->|Sim| ShowRoute[Carrega rota salva]
-    Found -->|Nao| GenRoute[POST tour-routes\nrota padrao]
+    AuthCheck -->|Sim| TryCurrentRoute[GET /api/tour-routes/current/]
+    TryCurrentRoute --> RouteFound{Rota salva\nencontrada?}
+    RouteFound -->|200 OK| ShowRoute[Exibe rota salva]
+    RouteFound -->|404| GenDefault[Gera rota padrao\nPOST /api/tour-routes/]
 
-    AuthCheck -->|Nao| GenRoute
+    AuthCheck -->|Nao| GenAnon[Gera rota anonima\nPOST /api/tour-routes/]
 
-    ShowRoute --> Map[Mapa Leaflet\npolyline + POIs]
-    GenRoute --> Map
+    ShowRoute --> RenderMap
+    GenDefault --> RenderMap
+    GenAnon --> RenderMap[Renderiza mapa Leaflet\npolyline + marcadores]
 
-    Map --> Prefetch[Pre-busca detalhes\nde todos os POIs\nem background]
-    Prefetch --> Idle{Interacao}
+    RenderMap --> Prefetch[Pre-busca detalhes de todos os POIs\nem background com 400ms de intervalo]
+    Prefetch --> Idle{Aguarda\ninteracao}
 
-    Idle -->|Filtro| Filter[Filtra marcadores\npor categoria]
+    Idle -->|Filtro categoria| Filter[Atualiza visibilidade\ndos marcadores]
     Filter --> Idle
 
-    Idle -->|Toca POI| Detail[GET pois/stop_id\nModal de detalhe]
+    Idle -->|Toca marcador ou item| OpenDetail[GET pois/stop_id\ninstantaneo se pre-buscado]
+    OpenDetail --> Modal[Exibe TourPoiDetailModal]
 
-    Detail -->|Visitado| Patch[PATCH state=visited\nRecalcula rota]
-    Patch --> Map
+    Modal -->|Marcar visitado| PatchVisited[PATCH .../state/ visited]
+    PatchVisited --> UpdateRoute[Atualiza rota e mapa]
+    UpdateRoute --> CloseModal
 
-    Detail -->|Excluir| Delete[DELETE stop\nReconstroi rota]
-    Delete --> Map
+    Modal -->|Excluir da rota| DeleteStop[DELETE .../stops/stop_id/]
+    DeleteStop --> RebuildRoute[Reconstroi rota]
+    RebuildRoute --> CloseModal
 
-    Detail -->|Fechar| Idle
+    Modal -->|Fechar| CloseModal[Fecha modal]
+    CloseModal --> Idle
 
-    Idle -->|Recalcular| GenRoute
+    Idle -->|Abrir perfil| Profile[ProfileScreen]
+    Profile -->|Abrir configuracoes| Settings[GET /api/tour-routes/preferences/]
+    Settings --> Adjust[Alterna categorias\nescolhe distancia e raio]
+    Adjust --> SaveSettings[PATCH /api/tour-routes/preferences/]
+    SaveSettings --> Idle
+
+    Idle -->|Recalcular rota| NewRoute[POST /api/tour-routes/\nusa preferencias salvas]
+    NewRoute --> RenderMap

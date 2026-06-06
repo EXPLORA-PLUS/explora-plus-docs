@@ -1,0 +1,36 @@
+<?xml version="1.0" ?>
+<!--GENERATED FILE, PLEASE DO NOT EDIT!!!--><EXT object="UserRouteSearchPreference" version="4">
+  <OBJECT>
+    <ID name="UserRouteSearchPreference" mc="Standard.Class" uid="5d6d3d1d-6d58-4f88-9248-9803d4c12420"/>
+    <PID name="explora_mais" mc="Standard.Package" uid="b3c7da48-4708-4563-83fd-221ecd936760"/>
+    <ATTRIBUTES>
+      <ATT name="IsActive">false</ATT>
+      <ATT name="IsMain">false</ATT>
+      <ATT name="IsElementary">false</ATT>
+      <ATT name="IsAbstract">false</ATT>
+      <ATT name="IsLeaf">false</ATT>
+      <ATT name="IsRoot">false</ATT>
+      <ATT name="Visibility">Public</ATT>
+      <ATT name="Name"><![CDATA[UserRouteSearchPreference]]></ATT>
+      <ATT name="status">1970354901745664</ATT>
+    </ATTRIBUTES>
+    <DEPENDENCIES>
+      <COMP relation="Descriptor">
+        <OBJECT>
+          <ID name="" mc="Infrastructure.Note" uid="c4df88ef-bc45-4517-8767-4e205ff83d68"/>
+          <ATTRIBUTES>
+            <ATT name="Content"><![CDATA[Persisted planner settings per authenticated user: includeCulture, includePark, includeFood, poiSpacingM, maxSearchRadiusM. Applies only on the next route search.]]></ATT>
+            <ATT name="MimeType"><![CDATA[text/plain]]></ATT>
+            <ATT name="Name"></ATT>
+            <ATT name="status">1970354901745664</ATT>
+          </ATTRIBUTES>
+          <DEPENDENCIES>
+            <LINK relation="Model">
+              <FOREIGNID name="description" mc="Infrastructure.NoteType" uid="00000000-0000-3e81-0000-000000000000"/>
+            </LINK>
+          </DEPENDENCIES>
+        </OBJECT>
+      </COMP>
+    </DEPENDENCIES>
+  </OBJECT>
+</EXT>

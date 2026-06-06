@@ -62,7 +62,7 @@
         <OBJECT>
           <ID name="" mc="Infrastructure.Note" uid="9c4b3f95-9d4b-4529-9c8b-470581c170a9"/>
           <ATTRIBUTES>
-            <ATT name="Content"></ATT>
+            <ATT name="Content"><![CDATA[UserRouteSearchPreference foi incorporado ao modelo como configuracao do planner por usuario. Ele controla categorias habilitadas, distancia entre POIs e raio maximo, sempre aplicados apenas na proxima busca de rota.]]></ATT>
             <ATT name="MimeType"><![CDATA[text/plain]]></ATT>
             <ATT name="Name"></ATT>
             <ATT name="status">1970354901745664</ATT>

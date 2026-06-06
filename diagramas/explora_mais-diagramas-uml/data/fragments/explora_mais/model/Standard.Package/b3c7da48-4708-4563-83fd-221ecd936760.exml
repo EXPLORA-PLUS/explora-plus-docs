@@ -20,6 +20,7 @@
         <COMPID name="User" mc="Standard.Class" uid="02609019-afbf-42fa-9170-c278015cd239"/>
         <COMPID name="Ticket" mc="Standard.Class" uid="3cf7a642-7711-445f-a478-66e3be460669"/>
         <COMPID name="Route" mc="Standard.Class" uid="52b00b72-dbd2-45c5-a6a1-2e4efe4e4f36"/>
+        <COMPID name="UserRouteSearchPreference" mc="Standard.Class" uid="5d6d3d1d-6d58-4f88-9248-9803d4c12420"/>
       </COMP>
       <COMP relation="Product">
         <COMPID name="explora_mais Class diagram" mc="Standard.ClassDiagram" uid="9c7e7ac8-cca2-4e32-9f61-4b1185f5eeaf"/>

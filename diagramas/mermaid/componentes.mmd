@@ -1,30 +1,30 @@
 flowchart TB
     subgraph Frontend["Aplicativo (Expo + React Native)"]
-        Screens[Telas\nExploreScreen / PlacesScreen / ProfileScreen]
-        Auth[AuthContext\nJWT tokens]
-        Services[Services\napi.ts interceptor 401 + refresh\ntourRoutes.ts / auth.ts]
-        Map[MapView\nLeaflet via WebView/iframe]
+        Screens["Telas\nExploreScreen / PlacesScreen / ProfileScreen / SearchSettingsScreen"]
+        Auth["AuthContext\nJWT tokens"]
+        Services["Services\napi.ts / tourRoutes.ts / auth.ts"]
+        Map["MapView\nLeaflet via WebView/iframe"]
         Screens --> Auth
         Screens --> Services
         Screens --> Map
     end
 
     subgraph Backend["API Backend (Django 5.1 + DRF)"]
-        AuthAPI[accounts\nPOST /api/auth/*\nGET /api/me/]
-        PlacesAPI[places\nGET /api/places/*]
-        TourRoutesAPI[tour_routes\nPOST /api/tour-routes/\nGET /api/tour-routes/current/\nGET /api/tour-routes/places/\nGET /api/tour-routes/pois/id/\nPATCH /api/tour-routes/saved/id/stops/id/state/\nDELETE /api/tour-routes/saved/id/stops/id/]
-        CoreAPI[core\nGET /api/health/]
-        TicketsAPI[tickets\nEndpoint mockado]
+        AuthAPI["accounts\nPOST /api/auth/*\nGET /api/me/"]
+        PlacesAPI["places\nGET /api/places/*"]
+        TourRoutesAPI["tour_routes\nPOST /api/tour-routes/\nGET/PATCH /api/tour-routes/preferences/\nGET /api/tour-routes/current/\nGET /api/tour-routes/places/\nGET /api/tour-routes/pois/id/\nPATCH .../stops/id/state/\nDELETE .../stops/id/"]
+        CoreAPI["core\nGET /api/health/"]
+        TicketsAPI["tickets\nEndpoint mockado"]
     end
 
     DB[(PostgreSQL 16\n+ PostGIS 3.4)]
 
-    subgraph Externos["APIs Externas (gratuitas / open)"]
+    subgraph Externos["APIs Externas (gratuitas/open)"]
         Nominatim["Nominatim\nGeocodificacao e extratags OSM"]
         OSRM["OSRM\nRoteamento pedestre"]
         Overpass["Overpass API\nBusca de POIs via OpenStreetMap"]
         Wikidata["Wikidata API\nImagem principal do lugar P18"]
-        Wikipedia["Wikipedia REST API\nResumo e imagem de fallback\npt wikipedia org / en wikipedia org"]
+        Wikipedia["Wikipedia REST API\nResumo e imagem fallback\npt e en"]
     end
 
     Services -->|HTTPS / JSON| AuthAPI
@@ -36,6 +36,6 @@ flowchart TB
     TourRoutesAPI --> DB
     TourRoutesAPI -->|geocoding| Nominatim
     TourRoutesAPI -->|rota pedestre| OSRM
-    TourRoutesAPI -->|POIs OSM| Overpass
+    TourRoutesAPI -->|POIs filtrados por preferencias| Overpass
     TourRoutesAPI -->|imagem| Wikidata
     TourRoutesAPI -->|resumo e fallback| Wikipedia

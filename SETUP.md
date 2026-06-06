@@ -43,6 +43,28 @@ Todas as configuracoes sensiveis ficam no arquivo `.env` (nunca commitado no Git
 
 > **Atencao:** o `.env.example` historico pode estar com porta `8000`. Use `8080` no setup atual.
 
+### Preferencias de busca por usuario
+
+As configuracoes do planner ficam no backend e sao persistidas por usuario autenticado.
+
+Defaults atuais:
+
+- `include_culture = true`
+- `include_park = true`
+- `include_food = true`
+- `poi_spacing_m = 100`
+- `max_search_radius_m = 250`
+
+Presets aceitos:
+
+- distancia entre POIs: `75`, `100`, `150`
+- raio maximo de busca: `150`, `250`, `400`
+
+Regra importante:
+
+- salvar essas preferencias **nao** recalcula a rota atual
+- elas passam a valer na proxima vez que o usuario tocar em `Gerar rota`
+
 ### Como gerar uma SECRET_KEY segura
 
 ```bash
@@ -202,7 +224,7 @@ explora-plus-backend/
 |   |   `-- seed_demo.py   # dados curados de demonstracao
 |   `-- catalog.py         # upsert de lugares a partir de payloads
 |-- tickets/               # endpoint isolado de ingressos mockados
-|-- tour_routes/           # planner, cache, rota atual, biblioteca do usuario
+|-- tour_routes/           # planner, cache, rota atual, biblioteca e preferencias
 |   |-- services/          # geocoding, routing, Overpass, Wikidata, Wikipedia, map builder
 |   `-- tests/             # testes do fluxo de rotas
 |-- routes/                # legado, fora do caminho ativo
@@ -231,12 +253,24 @@ explora-plus-backend/
 | GET    | `/api/places/<slug>/` | Nao | Detalhe de lugar |
 | POST   | `/api/tour-routes/` | Opcional | Calcula rota; salva se autenticado |
 | GET    | `/api/tour-routes/current/` | Sim | Rota mais recente do usuario |
+| GET    | `/api/tour-routes/preferences/` | Sim | Le preferencias salvas ou defaults do planner |
+| PATCH  | `/api/tour-routes/preferences/` | Sim | Salva preferencias para a proxima busca |
 | GET    | `/api/tour-routes/places/` | Sim | Biblioteca pessoal de lugares |
 | GET    | `/api/tour-routes/pois/<stop_id>/` | Nao | Detalhe enriquecido de POI |
 | PATCH  | `/api/tour-routes/places/<stop_id>/visited/` | Sim | Marca/desmarca visitado |
 | DELETE | `/api/tour-routes/saved/<route_id>/stops/<stop_id>/` | Sim | Exclui stop da rota |
 | PATCH  | `/api/tour-routes/saved/<route_id>/stops/<stop_id>/state/` | Sim | Muda estado publico do stop |
 | GET    | `/admin/` | Sim | Interface administrativa Django |
+
+### Fluxo das preferencias
+
+1. `ProfileScreen` abre `SearchSettingsScreen`.
+2. O frontend chama `GET /api/tour-routes/preferences/`.
+3. O usuario altera categorias, distancia entre POIs e raio maximo.
+4. O frontend chama `PATCH /api/tour-routes/preferences/`.
+5. O backend salva `UserRouteSearchPreference`.
+6. A rota atual continua igual.
+7. A proxima chamada de `POST /api/tour-routes/` passa a usar as novas preferencias e gera um `cache_key` diferente quando necessario.
 
 ---
 
