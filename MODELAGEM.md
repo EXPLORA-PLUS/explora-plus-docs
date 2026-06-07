@@ -1,7 +1,7 @@
 # Modelagem e Diagramas — Explora+
 
 > Especificacoes de modelagem e diagramas UML do MVP entregue.
-> Fontes Mermaid em `diagramas/mermaid/`. Projeto Modelio em `diagramas/explora_mais-diagramas-uml/`.
+> Fontes Mermaid em `diagramas/mermaid/`.
 
 ---
 
