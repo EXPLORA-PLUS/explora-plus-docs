@@ -7,6 +7,7 @@ Este repositorio nao contem a aplicacao em si. Ele concentra:
 - documentacao funcional e tecnica;
 - modelagem do dominio e dos fluxos do sistema;
 - diagramas fonte em Mermaid;
+- pacote final do Modelio para entrega;
 - exportacoes usadas nos papers;
 - papers academicos em LaTeX;
 - artefatos auxiliares de entrega e alinhamento do MVP.
@@ -73,6 +74,7 @@ explora-plus-docs/
 ├── MODELAGEM.md
 ├── SETUP.md
 ├── AUDITORIA-BOTOES-MVP-2026-06-01.md
+├── explora-plus-diagramas-uml-modelio-final.zip
 ├── fluxograma-projeto.html
 ├── fluxograma-projeto.pdf
 ├── diagramas/
@@ -108,6 +110,7 @@ Observacoes importantes sobre essa estrutura:
 - hoje os artefatos academicos estao separados em `paper-pce/` e `paper-pcg/`;
 - os arquivos `.mmd` em `diagramas/mermaid/` sao a fonte editavel dos principais diagramas;
 - as imagens PNG usadas nos papers sao exportacoes desses Mermaid;
+- o arquivo `explora-plus-diagramas-uml-modelio-final.zip` e o pacote final mais facil de localizar para abrir o projeto no Modelio;
 - `fluxograma-projeto.html` e um documento operacional mais visual, complementar a `MODELAGEM.md`.
 
 ---
@@ -190,6 +193,18 @@ Ele resume:
 
 O PDF gerado a partir dele (`fluxograma-projeto.pdf`) serve para compartilhar a mesma visao fora do navegador.
 
+### `explora-plus-diagramas-uml-modelio-final.zip`
+
+Pacote final do projeto UML no **Modelio**.
+
+Este arquivo existe com nome explicito justamente para facilitar a procura por parte do professor e da banca. Ele deve ser tratado como o artefato principal quando a necessidade for:
+
+- abrir o projeto final diretamente no Modelio;
+- validar a versao consolidada dos diagramas UML;
+- localizar rapidamente a entrega final de modelagem sem depender de navegar por varias pastas.
+
+Se surgirem backups, exportacoes intermediarias ou arquivos de trabalho com nomes menos claros, este `.zip` continua sendo a referencia principal de entrega.
+
 ---
 
 ## Ordem recomendada de leitura
@@ -252,6 +267,10 @@ Isso evita drift entre:
 - o diagrama vivo;
 - a documentacao tecnica;
 - a imagem estavel incluida no paper.
+
+Para a entrega do projeto Modelio em si, a referencia principal deve continuar sendo:
+
+- `explora-plus-diagramas-uml-modelio-final.zip`
 
 ---
 
