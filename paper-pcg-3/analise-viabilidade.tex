@@ -1,0 +1,105 @@
+\section{Análise Documental de Viabilidade}
+\label{sec:analise-documental}
+
+Esta seção apresenta os resultados da pesquisa documental sobre a integração de eventos geolocalizados. A pergunta que orientou a análise foi: \textit{a estrutura existente do Explora+ e as fontes de dados documentadas oferecem condições para recomendar eventos compatíveis com o percurso e com o horário de visita?} A resposta é construída a partir da inspeção do código e de fontes oficiais, sem atribuir à pesquisa medições de uma integração implementada.
+
+\subsection{Método e Fontes de Evidência}
+
+A consulta foi realizada em \textbf{29 de outubro de 2026}. O corpus compreende o texto da primeira entrega, o parecer docente informado ao grupo, o código local do backend e documentação oficial sobre eventos, consultas espaciais e horários. A revisão do backend examinada foi \texttt{0957f15}; a versão da primeira entrega preservada no repositório documental foi \texttt{bb92d2a}. Esses identificadores delimitam o estado técnico observado \parencite{explora2026codigo,explora2026entrega}.
+
+O procedimento consistiu em: identificar os dados exigidos pelos três critérios aprovados; procurar sua representação no código; consultar formas documentadas de obtenção e tratamento desses dados; e registrar evidências, lacunas e condições de viabilidade. Foram priorizadas fontes dos próprios responsáveis pelos serviços. A inspeção foi estática: não incluiu chamadas autenticadas às APIs de eventos, importação de dados, execução comparativa de rotas, testes de carga ou entrevistas.
+
+Para interpretar os achados, adotam-se três situações: \textbf{suporte existente}, quando o recurso está representado no código examinado; \textbf{suporte parcial}, quando existe uma base reutilizável, mas faltam mecanismos para atender ao requisito; e \textbf{não verificado}, quando a evidência documental não permite confirmar o comportamento. Essas situações descrevem o alcance da evidência e não constituem notas de desempenho.
+
+\subsection{Dados Necessários e Suporte do Projeto}
+
+Um evento recomendado precisa ter identidade, categoria ou descrição, localização confiável e informação temporal suficiente para a visita pretendida. A origem da informação deve ser preservada para conferência e atualização. Preço e moeda complementam a decisão do visitante, mas sua ausência não pode ser interpretada automaticamente como gratuidade.
+
+Em \path{places/models.py}, o modelo \texttt{Place} já contém localização geográfica, categoria, descrição, início e término do evento, preço, moeda e URL de origem. Os campos \texttt{event\_start\_at} e \texttt{event\_end\_at} são opcionais. A propriedade \texttt{is\_event} identifica o preenchimento do início, mas não verifica validade do intervalo, cancelamento ou compatibilidade com uma chegada prevista. O achado é, portanto, de \textbf{suporte parcial de representação}, e não de integração concluída \parencite{explora2026codigo}.
+
+O planejador examinado seleciona candidatos obtidos por Overpass e utiliza preferências de categorias, espaçamento e raio. Não foi identificado nesse fluxo um mecanismo que consulte fontes de eventos e combine suas datas com o momento provável da visita. Os contratos de requisição de rota e de retorno de POIs tampouco apresentam uma janela de visita ou os horários do evento como parte dessa seleção.
+
+Há também uma diferença relevante entre armazenar e apresentar os dados: o serializador de lugares, \texttt{PlaceSerializer}, não expõe as datas do evento. Assim, a existência dos campos no banco não assegura que o usuário receba as informações temporais necessárias. Uma futura integração exigiria revisar o fluxo de dados até a interface.
+
+\subsection{Resultados da Consulta às Fontes de Eventos}
+
+\textbf{Ticketmaster.} A documentação da Discovery API descreve pesquisa por localização, período e classificação, acesso por chave de API e limites de requisições. Isso indica uma interface estruturada candidata à integração. Contudo, a existência dos filtros não comprova cobertura suficiente em Santos, disponibilidade de todos os dados necessários ou adequação de cada registro à rota. Não foram realizadas consultas autenticadas nem verificada uma amostra local. A classificação documental é de fonte tecnicamente candidata, com acesso e cobertura ainda a verificar \parencite{ticketmaster2026}.
+
+\textbf{Sympla.} O contrato OpenAPI consultado descreve a listagem dos eventos do produtor autenticado e o uso do cabeçalho \texttt{s\_token}. O esquema de evento inclui endereço com latitude e longitude, início, término, categoria, URL e informação de cancelamento; o término não figura entre os campos obrigatórios do esquema. O resultado favorece uma integração com produtores autorizados, mas não permite assumir acesso irrestrito a um catálogo de todos os eventos da cidade. Essa distinção altera a viabilidade operacional de uma descoberta automática ampla \parencite{sympla2026}.
+
+\textbf{Agenda oficial de Santos.} A página de eventos do Turismo Santos publica atrações locais com datas, categorias e, em diversos registros, endereço. Na página consultada não foi identificado um contrato de API; esse achado se limita ao material examinado e não demonstra inexistência de outros canais. Para uma etapa inicial, a agenda é uma fonte documental para curadoria, condicionada à conferência das informações e das condições de uso antes de eventual automação \parencite{santos2026agenda}.
+
+Como exemplo de completude documental, o registro do \textit{Chororô -- Festival de Choro de Santos}, consultado na mesma data, informa o período de 29 a 31 de outubro e o endereço do Clube do Choro, na Rua Quinze de Novembro, 68, Centro. O campo de horários remete à programação completa, sem fornecer uma sessão única. O registro ajuda a identificar o local e o período, mas exige consulta complementar para verificar uma visita em horário específico \parencite{santos2026chororo}. Não foi calculada a proximidade desse evento a uma rota.
+
+O conjunto das fontes indica disponibilidade de informações relevantes, com diferentes níveis de estrutura e acesso. Não permite concluir que uma única fonte cubra todos os eventos turísticos de Santos. A combinação futura de fontes exigiria normalizar categorias, conferir coordenadas, distinguir sessões de um mesmo evento e controlar duplicações e atualizações.
+
+\subsection{Análise dos Três Critérios Aprovados}
+
+\subsubsection{Proximidade Geográfica}
+
+O módulo \path{tour_routes/services/geometry.py} contém funções para projetar um ponto sobre o traçado, estimar sua distância ao percurso e localizar seu progresso ao longo da rota. As preferências existentes admitem raios de 150, 250 ou 400 metros. Esses recursos constituem base reutilizável para uma seleção espacial futura; os valores existentes não foram validados nesta pesquisa como limites adequados para eventos.
+
+A documentação do PostGIS descreve consultas de proximidade entre objetos geográficos, com distância em metros para o tipo \texttt{geography}, por meio de \texttt{ST\_DWithin}. Isso oferece uma alternativa compatível com a base espacial do projeto, cuja aplicação ao trajeto precisaria ser desenvolvida \parencite{postgis2026}.
+
+A proximidade geométrica é apenas um primeiro critério de seleção. Ela não equivale ao desvio real por ruas, travessias e acessos. Para demonstrar impacto no percurso seria necessário comparar rotas calculadas sobre uma rede de circulação adequada. Esta pesquisa não mediu distância adicional nem acessibilidade dos deslocamentos.
+
+\subsubsection{Compatibilidade de Horário}
+
+A compatibilidade depende do horário de chegada ao evento, e não apenas da coincidência entre a data do passeio e a data anunciada. Uma regra futura precisaria considerar saída, deslocamentos, duração das paradas, eventual espera e o funcionamento de cada sessão. Um período de vários dias não significa disponibilidade contínua durante todo o intervalo.
+
+O projeto possui campos temporais e configuração de fuso, mas o planejador examinado não recebe horário de saída nem calcula chegadas às paradas. No modo de passeio livre, a duração é estimada pela distância geométrica e por uma velocidade constante; isso não constitui previsão validada de chegada a um evento. O suporte temporal foi classificado como parcial.
+
+A documentação do Django oferece tratamento de datas com fuso e armazenamento em UTC quando esse suporte está habilitado. Esse recurso permite normalizar instantes, mas não resolve sozinho a lógica de sessões, permanência e escolha de eventos \parencite{django2026timezone}. Uma futura avaliação deverá interpretar os horários locais em \texttt{America/Sao\_Paulo} e tratar explicitamente dados incompletos ou intervalos inconsistentes.
+
+\subsubsection{Relevância Turística}
+
+As categorias e preferências já existentes permitem relacionar atrações a interesses gerais, como cultura, parques e alimentação. Descrições e classificações publicadas pelas fontes oferecem informação para uma curadoria inicial. Contudo, proximidade e coincidência de horário não garantem interesse para o visitante.
+
+Seria necessário definir como as categorias externas se relacionam às preferências do aplicativo, distinguir eventos de atrações permanentes e apresentar informações suficientes para uma decisão consciente. Essa definição pode sustentar uma seleção explicável, mas a pesquisa documental não demonstrou satisfação, utilidade percebida ou preferência dos usuários. Esses aspectos continuam dependentes de avaliação prática.
+
+\clearpage
+\subsection{Matriz de Evidências e Lacunas}
+
+A Tabela~\ref{tab:matriz-viabilidade} reúne os resultados da inspeção. As evidências internas referem-se à revisão de código indicada na metodologia; as externas são as fontes oficiais discutidas anteriormente. As conclusões da tabela são interpretações da pesquisa, e não resultados de execução de rotas.
+
+\begin{table}[H]
+\centering
+\caption{Requisitos, evidências documentais e condições de viabilidade}
+\label{tab:matriz-viabilidade}
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.16}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{3.0cm}>{\raggedright\arraybackslash}p{6.0cm}>{\raggedright\arraybackslash}p{6.4cm}@{}}
+\toprule
+\textbf{Requisito} & \textbf{Evidência examinada} & \textbf{Resultado e condição} \\
+\midrule
+Representar eventos & \texttt{Place} possui localização, categoria, descrição, datas e fonte. & Suporte parcial: validar dados obrigatórios, intervalos, sessões e estado de publicação. \\[0.12cm]
+Obter eventos externos & Ticketmaster documenta descoberta; Sympla documenta eventos do produtor autenticado. & Interfaces candidatas; acesso e cobertura local não foram verificados por execução. \\[0.12cm]
+Consultar agenda local & Turismo Santos publica eventos; o registro do Chororô remete a horários complementares. & Fonte para curadoria; cada registro exige conferência de completude e atualização. \\[0.12cm]
+Selecionar por proximidade & Há projeção de pontos e raio nas preferências; PostGIS documenta consultas em metros. & Base espacial reutilizável; integração ao filtro de eventos e desvio real ainda precisam de validação. \\[0.12cm]
+Selecionar por horário & Existem datas no modelo, mas o contrato de rota não recebe saída ou janela de visita. & Suporte parcial: desenvolver estimativa de chegada, tratamento de sessões e seleção temporal. \\[0.12cm]
+Relacionar interesses & Categorias e preferências filtram POIs; fontes descrevem categorias de eventos. & Exige normalização e curadoria; utilidade turística não foi medida. \\[0.12cm]
+Apresentar recomendação & Os contratos examinados não expõem o fluxo temporal necessário à recomendação. & Adaptar dados e interface para comunicar data, horário, fonte e condições do evento. \\[0.12cm]
+Manter dados atuais & A chave de cache considera origem, destino e preferências, sem dimensão temporal de eventos. & Revisar chave, validade e atualização para evitar recomendações vencidas ou canceladas. \\[0.12cm]
+Demonstrar benefício & O planejamento anterior prevê comparação de rotas e avaliação de utilidade. & Não verificado: faltam execução comparativa, medições e avaliação por usuários. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Discussão da Viabilidade}
+
+Os achados sustentam uma \textbf{viabilidade técnica documental condicionada}. Há correspondência entre parte dos dados necessários, os recursos do projeto e interfaces documentadas de fornecedores. Não se identificou, no escopo examinado, uma incompatibilidade estrutural que inviabilize a proposta. Entretanto, campos disponíveis e documentação de API não demonstram que o fluxo completo funcione ou gere benefícios.
+
+A principal condição operacional é obter dados locais completos e atualizados por um canal cujo acesso seja confirmado. A principal condição técnica é combinar espaço e tempo na seleção e preservar essa informação na resposta e no cache. No código examinado, a chave de cache é formada por origem, destino e preferências; uma extensão temporal precisaria considerar o momento da visita e a atualização dos eventos para evitar reaproveitamento inadequado de recomendações.
+
+Uma evolução coerente seria selecionar uma fonte autorizada ou uma base curada, normalizar seus registros e oferecer eventos como recomendações adicionais, preservando a decisão do visitante. Depois, um protótipo poderia verificar o efeito da inclusão no percurso e a compatibilidade dos horários. Trata-se de uma possibilidade de evolução derivada da análise, sem implementação nesta entrega.
+
+A pesquisa não demonstrou inviabilidade tecnológica geral, mas também não comprova viabilidade operacional em produção, retorno econômico ou melhoria da experiência turística. Essas dimensões dependem de cobertura efetiva das fontes, custo de manutenção, funcionamento do protótipo e evidência obtida com usuários.
+
+\subsection{Limitações e Relação com a Estratégia Anterior}
+
+O material analisado documenta possibilidades e lacunas em uma data e revisão específicas. O exame não é um levantamento exaustivo de fornecedores e não mede frequência de atualização, disponibilidade das APIs, qualidade de coordenadas ou cobertura por bairro. As fontes podem mudar após a consulta.
+
+Não houve comparação executada entre rota base e rota com eventos, cálculo de desvio adicional, medição de desempenho ou coleta de percepção de utilidade. Por isso, esta versão apresenta resultados de pesquisa documental incorporados ao texto da primeira entrega, sem equipará-los aos resultados experimentais previstos na estratégia aprovada.
+
+A etapa seguinte de validação deverá retomar a comparação, incluindo eventos elegíveis, incompatíveis com o horário, distantes do trajeto e com dados incompletos. Esses casos são recomendações para trabalho futuro, e não testes realizados. A conclusão atual deverá ser revista conforme as evidências dessa etapa.

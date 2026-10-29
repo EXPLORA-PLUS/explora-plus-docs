@@ -1,0 +1,427 @@
+\documentclass[12pt, a4paper]{article}
+
+% Codificacao e idioma
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+
+% Layout e margem ABNT
+\usepackage[top=3cm, bottom=2cm, left=3cm, right=2cm]{geometry}
+
+% Tipografia
+\usepackage{times}
+\usepackage{setspace}
+\onehalfspacing
+
+% Figuras e tabelas
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{xurl}
+\usepackage{multirow}
+
+% Links e referencias
+\usepackage[hidelinks,hypertexnames=false]{hyperref}
+\usepackage[
+  backend=biber,
+  style=abnt,
+  citestyle=abnt
+]{biblatex}
+\addbibresource{referencias.bib}
+
+% Identacao do primeiro paragrafo
+\usepackage{indentfirst}
+
+% Melhora quebra de linha e elimina overfull hboxes
+\usepackage{microtype}
+\setlength{\emergencystretch}{1em}
+\raggedbottom
+
+% Acabamento visual do trabalho
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{eso-pic}
+
+% Titulos de secao
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{2}
+\renewcommand{\contentsname}{Sum\'ario}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\fancypagestyle{plain}{%
+  \fancyhf{}%
+  \fancyfoot[C]{\thepage}%
+  \renewcommand{\headrulewidth}{0pt}%
+  \renewcommand{\footrulewidth}{0pt}%
+}
+
+\titleformat{\section}
+  {\normalfont\Large\bfseries}
+  {\thesection}{1em}{}
+  [\vspace{0.2cm}\titlerule]
+\titlespacing*{\section}{0pt}{0pt}{1.0cm}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries}
+  {\thesubsection}{1em}{}
+\titlespacing*{\subsection}{0pt}{0.8cm}{0.3cm}
+
+% -----------------------------------------------------------
+\begin{document}
+
+% -----------------------------------------------------------
+% CAPA
+% -----------------------------------------------------------
+\begin{titlepage}
+\thispagestyle{empty}
+\AddToShipoutPictureFG*{%
+  \AtPageUpperLeft{%
+    \hspace*{1.8cm}\raisebox{-2.35cm}{\includegraphics[width=2.25cm]{figuras/brasao-unisantos.png}}%
+  }%
+}
+
+\begin{center}
+  \vspace*{0.15cm}
+  {\Large\bfseries UNIVERSIDADE CAT\'OLICA DE SANTOS}\\[0.35cm]
+  {\normalsize Centro de Ci\^encias Exatas, Arquitetura e Engenharia}\\[0.18cm]
+  {\normalsize Curso de Ci\^encia da Computa\c{c}\~ao}\\[0.18cm]
+  {\small Pesquisa Curricularizada da Gradua\c{c}\~ao}\\[4.1cm]
+
+  {\Huge\bfseries Explora+}\\[0.45cm]
+  {\Large\bfseries An\'alise de Viabilidade da Integra\c{c}\~ao\\[0.12cm]
+  de Eventos Geolocalizados}
+\end{center}
+
+\vfill
+
+\begin{flushleft}
+  \hspace*{0.8cm}%
+  \begin{minipage}{0.70\textwidth}
+    {\small\bfseries Integrantes}\\[0.25cm]
+    {\normalsize
+      Felipe Barbosa dos Santos\\
+      Arthur Almeida Lima\\
+      Jo\~ao Gabriel Henriques Cardoso\\
+      Lucas Carmona Neto\\
+      Lucas Cerqueira Galv\~ao
+    }
+  \end{minipage}
+\end{flushleft}
+
+\vspace{0.9cm}
+
+\begin{center}
+  {\normalsize Santos -- SP}\\[0.18cm]
+  {\normalsize 2026}
+\end{center}
+\end{titlepage}
+
+\pagenumbering{roman}
+
+% -----------------------------------------------------------
+% RESUMO
+% -----------------------------------------------------------
+\thispagestyle{plain}
+\noindent\textbf{Resumo.} Este trabalho consolida a pesquisa do projeto Explora+ e incorpora ao texto da primeira entrega do 8º semestre a análise documental da viabilidade de integrar eventos geolocalizados às rotas turísticas. A entrega anterior recebeu conceito “Deferido”, com reconhecimento do cumprimento da proposta e da definição da estratégia experimental. A investigação desta etapa confronta os critérios de proximidade geográfica, compatibilidade de horário e relevância turística com a estrutura do código e com documentação oficial de fontes de eventos e tecnologias. Os resultados identificam suporte parcial no modelo de dados, recursos geométricos reutilizáveis e fontes documentadas para obtenção de informações, além de lacunas na seleção temporal, atualização dos dados e apresentação das recomendações. Conclui-se pela viabilidade técnica em nível documental, condicionada à obtenção de dados adequados e à implementação dos mecanismos identificados. A comparação prática entre rotas, a avaliação por usuários e os ganhos de experiência permanecem sem comprovação experimental nesta etapa.
+\par\vspace{0.4cm}
+\noindent\textbf{Palavras-chave:}\\
+Turismo Inteligente; Dados Abertos; OpenStreetMap; Eventos Geolocalizados; Experimenta\c{c}\~ao.
+\clearpage
+
+% -----------------------------------------------------------
+% SUMARIO
+% -----------------------------------------------------------
+\thispagestyle{plain}
+\tableofcontents
+\clearpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+% -----------------------------------------------------------
+\section{Introdu\c{c}\~ao}
+% -----------------------------------------------------------
+
+A primeira entrega desta pesquisa estabeleceu o arcabou\c{c}o te\'orico que embasa o projeto Explora+: o conceito de Economia Criativa como vetor de desenvolvimento local \parencite{silva2020}, o modelo de Destinos Tur\'isticos Inteligentes (DTI) proposto pelo Minist\'erio do Turismo \parencite{brasil2022}, e evid\^encias emp\'iricas de que a visibilidade digital de pequenos estabelecimentos gera aumento mensur\'avel de receita \parencite{luca2022} e engajamento \parencite{shankar2025}. Sobre essa base, o prot\'otipo funcional foi constru\'ido e entregue, demonstrando a viabilidade t\'ecnica da proposta.
+
+A primeira entrega do 8º semestre definiu uma estratégia para investigar a integração de eventos geolocalizados às rotas e foi deferida pela docente. A presente versão incorpora os resultados de uma pesquisa documental de viabilidade ao texto já apresentado. As Seções~2 a 6 mantêm o histórico da avaliação, a base técnica, a análise de impacto, os diagramas e a estratégia proposta. A Seção~\ref{sec:analise-documental} explicita o método realizado, apresenta as evidências e discute as condições para uma integração futura; a conclusão sintetiza o alcance desses resultados.
+
+As descrições técnicas e os impactos potenciais preservados da entrega anterior constituem contexto do projeto. Não representam resultados de um experimento com eventos, nem demonstram benefícios efetivamente observados em usuários. Esta distinção orienta a leitura dos resultados documentais acrescentados nesta versão.
+% -----------------------------------------------------------
+\clearpage
+\section{Histórico dos Pareceres e Continuidade}
+% -----------------------------------------------------------
+
+A descri\c{c}\~ao da primeira entrega do 8\textordmasculine{} semestre solicitava refletir sobre as cr\'iticas e sugest\~oes apresentadas na avalia\c{c}\~ao da \'ultima entrega do 7\textordmasculine{} semestre, realizar as corre\c{c}\~oes pertinentes e definir uma estrat\'egia para a experimenta\c{c}\~ao da inova\c{c}\~ao proposta no semestre anterior.
+
+No caso do Explora+, o parecer recebido para a entrega anterior foi apenas: \textbf{``Bom trabalho''}. N\~ao foram apresentadas cr\'iticas, sugest\~oes espec\'ificas ou solicita\c{c}\~oes de mudan\c{c}a. Por isso, este documento assume que n\~ao h\'a corre\c{c}\~oes obrigat\'orias decorrentes da avalia\c{c}\~ao. A primeira entrega do semestre deu continuidade ao trabalho, preservando os elementos apresentados e definindo a estrat\'egia de experimenta\c{c}\~ao.
+
+A entrega realizada em 26/09/2026, às 07h54, foi avaliada em 12/10/2026, às 16h03, pela docente \textbf{Roseli Fernandes Rocha (5017)}, com conceito \textbf{“Deferido”}. O parecer registra: \textbf{“A proposta foi cumprida”} e conclui que \textbf{“os objetivos propostos para esta etapa foram atendidos”}. A docente reconhece o registro da reflexão sobre o 7º semestre e a definição da comparação entre a rota atual e uma rota enriquecida por eventos, segundo proximidade, horário e relevância turística. Não foram apresentadas solicitações específicas de correção nesse parecer.
+
+Para a segunda entrega, a descrição da atividade solicita: \textbf{“Apresentar a análise dos resultados da experimentação, demonstrando a viabilidade ou a inviabilidade da inovação tecnológica, e incorporá-la ao texto da primeira entrega.”} O período regular informado é de 19/10/2026 a 30/10/2026, com entrega em atraso permitida até 06/11/2026.
+
+Esta versão incorpora a análise documental realizada à base anterior. O deferimento da estratégia não constitui validação dos resultados da inovação. Como a comparação prática de rotas não foi executada nesta etapa, seus resultados permanecem uma limitação expressa da pesquisa apresentada.
+% -----------------------------------------------------------
+\clearpage
+\section{Detalhamento da Inova\c{c}\~ao}
+% -----------------------------------------------------------
+
+O Explora+ n\~ao \'e apenas um agregador de pontos de interesse: \'e uma pilha t\'ecnica desenhada para operar sem depend\^encia de APIs comerciais, ao mesmo tempo em que entrega ao usu\'ario uma experi\^encia personalizada e rica em conte\'udo. As quatro subse\c{c}\~oes a seguir detalham cada camada desta inova\c{c}\~ao.
+
+\subsection{Pipeline de Dados Abertos}
+
+A escolha estrat\'egica mais significativa do Explora+ \'e a substitui\c{c}\~ao de APIs comerciais de mapeamento por um \emph{stack} inteiramente composto por projetos abertos e auto-hospedados. A Tabela~\ref{tab:apis} compara as op\c{c}\~oes comerciais originalmente avaliadas com as alternativas adotadas.
+
+\begin{table}[H]
+\centering
+\caption{Substitui\c{c}\~ao de APIs comerciais por alternativas abertas}
+\label{tab:apis}
+\small
+\begin{tabular}{p{3.8cm}p{3.8cm}p{4.8cm}}
+\toprule
+\textbf{Fun\c{c}\~ao} & \textbf{API Comercial} & \textbf{Alternativa Adotada} \\
+\midrule
+Geocodifica\c{c}\~ao de endere\c{c}os & Google Maps Geocoding & Nominatim (OSM) \\
+C\'alculo de rotas pedestres & Google Maps Directions & OSRM (Open Source Routing Machine) \\
+Descoberta de POIs & GeoAPIFy, Foursquare & Overpass API (OpenStreetMap) \\
+Eventos e ingressos & Sympla, TicketMaster & --- (8\textordmasculine{} semestre) \\
+Mobilidade urbana & Uber API, 99 API & --- (8\textordmasculine{} semestre) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A decis\~ao por dados abertos tem tr\^es motiva\c{c}\~oes complementares. Do ponto de vista \textbf{econ\^omico}, APIs comerciais cobram por volume de requisi\c{c}\~oes: para um aplicativo em escala, o custo opera\c{c}\~onal seria proibitivo antes mesmo da gera\c{c}\~ao de receita. Do ponto de vista \textbf{t\'ecnico}, o OpenStreetMap \parencite{osm2024} \'e a maior base de dados geogr\'aficos colaborativos do mundo, cobrindo mais de 200 pa\'ises com n\'ivel de detalhe superior ao Google Maps em diversas cidades brasileiras. Do ponto de vista de \textbf{soberania de dados}, o projeto n\~ao fica sujeito a mudan\c{c}as unilaterais de pre\c{c}os ou de termos de uso --- problema que afetou in\'umeros projetos em 2018, quando o Google triplicou os pre\c{c}os da Maps Platform.
+
+O Nominatim realiza a convers\~ao de endere\c{c}os em coordenadas geogr\'aficas; o OSRM calcula a rota pedestre \'otima entre os pontos de interesse; e a Overpass API consulta todos os n\'os e rela\c{c}\~oes do OpenStreetMap dentro de um raio configurado pelo usu\'ario, retornando POIs de categorias selecionadas (cultura, parques e natureza, alimenta\c{c}\~ao). O diagrama de componentes da Se\c{c}\~ao~5 ilustra como esses servi\c{c}os se integram na arquitetura do sistema.
+
+\subsection{Enriquecimento Progressivo de POIs}
+
+Dados do OpenStreetMap, embora abrangentes em termos de localiza\c{c}\~ao e categoria, frequentemente carecem de descri\c{c}\~oes, fotografias e conte\'udo editorial sobre os lugares. Para suprir essa lacuna sem curadoria manual --- invi\'avel em escala --- o Explora+ implementa um pipeline de \textbf{enriquecimento progressivo} em tr\^es camadas:
+
+\begin{enumerate}
+  \item \textbf{Extratags do OSM:} ao consultar a Overpass API, o sistema coleta todos os campos adicionais do n\'o OSM (\texttt{tourism}, \texttt{name}, \texttt{description}, \texttt{website}, \texttt{phone}, \texttt{opening\_\allowbreak{}hours}). Muitos POIs j\'a possuem estas informa\c{c}\~oes preenchidas pela comunidade.
+
+  \item \textbf{Wikidata (propriedade P18):} se o n\'o OSM cont\'em o campo \texttt{wikidata} com o identificador do local no Wikidata, o sistema consulta automaticamente a propriedade P18 (\textit{image}) para obter a URL de uma fotografia licenciada sob Creative Commons. Esta etapa \'e executada de forma ass\'incrona para n\~ao bloquear a resposta da rota.
+
+  \item \textbf{Wikip\'edia (fallback pt \textrightarrow{} en):} se o n\'o OSM cont\'em o campo \texttt{wikipedia}, o sistema consulta o resumo da p\'agina em portugu\^es. Quando a p\'agina n\~ao existe em portugu\^es, o sistema tenta automaticamente o c\'odigo de idioma em ingl\^es (\textit{fallback}), garantindo que mesmo POIs sem descri\c{c}\~ao em pt-BR n\~ao fiquem sem conte\'udo.
+\end{enumerate}
+
+O resultado final \'e um objeto de POI enriquecido entregue ao frontend, com nome, coordenadas, categoria, descri\c{c}\~ao editorial e fotografia --- tudo obtido de fontes abertas, sem curadoria manual e sem custo por requisi\c{c}\~ao. O diagrama de sequ\^encia na Figura~\ref{fig:sequencia} ilustra o fluxo de enriquecimento de um POI individual.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.90\textwidth]{figuras/sequencia-detalhe-poi.png}
+  \caption{Diagrama de sequ\^encia: enriquecimento de detalhe de POI}
+  \label{fig:sequencia}
+\end{figure}
+
+Esta abordagem \'e inovadora no contexto de aplica\c{c}\~oes tur\'isticas brasileiras: diferente de plataformas como TripAdvisor (que depende de avalia\c{c}\~oes manuais), Google Maps (que depende de fotos enviadas por usu\'arios) ou guias editoriais (que exigem equipes de redatores), o Explora+ extrai conte\'udo j\'a existente em bases colaborativas, sem requerer nenhuma intera\c{c}\~ao humana adicional para cada novo POI inclu\'ido.
+
+\subsection{Planner Multi-POI com Personaliza\c{c}\~ao por Usu\'ario}
+
+O n\'ucleo computacional do Explora+ \'e o planner de rotas, que evoluiu do paradigma de rota com destino \'unico para um planejador multi-POI personalizado. Dado um ponto de partida e um destino final, o sistema:
+
+\begin{enumerate}
+  \item Calcula a rota pedestre bruta entre os dois pontos via OSRM;
+  \item Consulta todos os POIs no entorno do trajeto, respeitando raio e dist\^ancia entre pontos configurados pelo usu\'ario;
+  \item Filtra os POIs pelas categorias habilitadas nas prefer\^encias do usu\'ario;
+  \item Ordena os POIs por dist\^ancia ao trajeto, selecionando os mais pr\'oximos;
+  \item Recalcula a rota final passando pelos POIs selecionados em ordem.
+\end{enumerate}
+
+{\sloppy
+O diferencial frente a solu\c{c}\~oes existentes est\'a nos modelos \texttt{User\-Route\-Search\-Preference} e \texttt{Route\-Search\-Cache}. O primeiro persiste, por usu\'ario autenticado, as prefer\^encias de busca: categorias de interesse (\textit{cultura}, \textit{parques}, \textit{alimenta\c{c}\~ao}), dist\^ancia m\'inima entre POIs (75\,m, 100\,m ou 150\,m) e raio m\'aximo de busca em torno do trajeto (150\,m, 250\,m ou 400\,m). O segundo implementa um cache inteligente cujo identificador (\textit{cache key}) incorpora as prefer\^encias do usu\'ario: dois usu\'arios com prefer\^encias diferentes para o mesmo trajeto obter\~ao rotas distintas, enquanto o mesmo usu\'ario que repetir uma busca id\^entica recebe o resultado em milissegundos, sem re-executar as consultas \`a Overpass API e ao OSRM.
+\par}
+
+Esta combina\c{c}\~ao de personaliza\c{c}\~ao e cache \'e especialmente relevante para o turismo: visitantes que preferem gastronomia e aqueles que preferem hist\'oria e cultura merecem itiner\'arios diferentes, mesmo que partam e cheguem ao mesmo ponto. A personaliza\c{c}\~ao por usu\'ario \'e o que diferencia o Explora+ de um simples visualizador de pontos no mapa.
+
+\subsection{Plataforma Transfer\'ivel para Qualquer Munic\'ipio}
+
+Uma decis\~ao de arquitetura impl\'icita nas escolhas anteriores merece destaque expl\'icito: o Explora+ n\~ao est\'a acoplado a Santos~--~SP. A configura\c{c}\~ao do ponto de busca \'e din\^amica e determinada pelas coordenadas fornecidas pelo usu\'ario no frontend; o backend n\~ao cont\'em nenhuma refer\^encia geogr\'afica \emph{hardcoded}.
+
+Para implantar o Explora+ em outra cidade, basta:
+\begin{itemize}
+  \item Garantir que a cidade tenha cobertura no OpenStreetMap (v\'alido para praticamente todos os munic\'ipios brasileiros e para mais de 200 pa\'ises);
+  \item Atualizar os dados de semente (\textit{seed}) com pontos de interesse curados localmente (opcional, pois o discovery via Overpass j\'a funciona sem seeds);
+  \item Configurar a vari\'avel de ambiente de URL do backend no frontend.
+\end{itemize}
+
+Esta transferibilidade tem impacto direto no potencial de escala do projeto. Enquanto guias tur\'isticos tradicionais s\~ao produzidos por cidade, o Explora+ \'e uma infraestrutura reutiliz\'avel que pode ser implantada por prefeituras, secretarias de turismo ou grupos acad\^emicos em qualquer localidade, conforme discutido na Se\c{c}\~ao~4.
+
+% -----------------------------------------------------------
+\clearpage
+\section{An\'alise de Impacto}
+% -----------------------------------------------------------
+
+A primeira entrega desta pesquisa identificou tr\^es eixos de impacto potencial: a visibilidade digital de pequenos estabelecimentos \parencite{luca2022,shankar2025}, a experi\^encia do visitante como vetor de Economia Criativa \parencite{silva2020,melo2022}, e o modelo de Destinos Tur\'isticos Inteligentes como referencial de pol\'itica p\'ublica \parencite{brasil2022}. Com o prot\'otipo constru\'ido, \'e poss\'ivel agora analisar esses impactos com maior especificidade.
+
+\subsection{Impacto Social}
+
+O principal impacto social do Explora+ \'e a \textbf{democratiza\c{c}\~ao da descoberta tur\'istica}. Visitantes e pr\'oprios moradores de Santos frequentemente desconhecem uma parcela significativa do patrim\^onio cultural, natural e gastron\^omico dispon\'ivel na cidade. O aplicativo resolve esse problema de duas formas complementares:
+
+Primeiro, ao calcular rotas que passam por POIs pr\'oximos ao trajeto do usu\'ario, o Explora+ expande naturalmente o horizonte do visitante para al\'em dos pontos mais famosos --- o efeito de descoberta (\textit{serendipity}) \'e embutido no algoritmo, n\~ao dependendo de busca ativa do usu\'ario.
+
+Segundo, ao agregar conte\'udo editorial proveniente do Wikidata e da Wikip\'edia, o aplicativo oferece contexto hist\'orico e cultural sobre cada ponto visitado, transformando um passeio recreativo em uma experi\^encia educativa acess\'ivel.
+
+Para estabelecimentos com menor visibilidade digital --- cafeterias, galerias de arte alternativas, parques municipais --- o Explora+ funciona como um \textit{aggregator} de visibilidade gratuito. \textcite{luca2022} demonstraram que a presen\c{c}a em plataformas digitais gera incremento m\'edio de 5\% na receita de pequenos neg\'ocios, especialmente aqueles sem or\c{c}amento para marketing tradicional. O Explora+ replica esse efeito para estabelecimentos que sequer t\^em perfil no Google Maps ou no TripAdvisor, desde que existam no OpenStreetMap.
+
+\subsection{Impacto Econ\^omico}
+
+O impacto econ\^omico do Explora+ opera em dois n\'iveis distintos.
+
+No n\'ivel \textbf{micro}, o aplicativo amplia o alcance de clientes para estabelecimentos locais ao inclu\'i-los organicamente nas rotas geradas. Um restaurante no centro hist\'orico que n\~ao investe em publicidade passa a ser sugerido a turistas cujas rotas passam pr\'oximas a ele. Esta amplifica\c{c}\~ao de visibilidade segue o mesmo mecanismo documentado por \textcite{shankar2025} para o Google Business Profile, mas sem requerer que o estabelecimento gerencie ativamente seu perfil digital.
+
+No n\'ivel \textbf{macro}, o aplicativo contribui para a \textbf{descentraliza\c{c}\~ao do fluxo tur\'istico}. Cidades tur\'isticas sofrem frequentemente do fen\^omeno de \textit{overtourism}: a concentra\c{c}\~ao de visitantes em poucos pontos famosos ao mesmo tempo em que \'areas igualmente interessantes permanecem subutilizadas. Ao distribuir rotas por m\'ultiplos POIs em diferentes bairros, o Explora+ fomenta um turismo mais distribu\'ido geograficamente, com benef\'icios econ\^omicos para mais estabelecimentos.
+
+Na entrega anterior, POIs patrocinados, planos premium e parcerias com agências foram considerados como possibilidades de receita. A funcionalidade registrada para o PCE neste semestre é a inserção de anúncios por meio do Google Ads, conforme a Seção~6.1. Essas possibilidades comerciais não constituem resultados da pesquisa de eventos.
+
+\subsection{Impacto Educacional e Extensionista}
+
+O Explora+ \'e um projeto de extens\~ao universit\'aria, e esse car\'ater determina uma dimens\~ao de impacto freq\"uentemente negligenciada em an\'alises de produto: o \textbf{impacto sobre o pr\'oprio processo de desenvolvimento}.
+
+A equipe enfrentou e resolveu problemas reais e complexos: integra\c{c}\~ao de bases de dados geogr\'aficas heterog\^eneas, implementa\c{c}\~ao de cache distribu\'ido com chaves compostas, desenvolvimento mobile com Expo e React Native, e entrega de um sistema de ponta a ponta com autenticac\~ao, persist\^encia e rotas calculadas em produc\~ao. Nenhum desses problemas seria encontrado em um projeto puramente acad\^emico com dados sint\'eticos.
+
+Al\'em disso, toda a base de c\'odigo est\'a publicada sob licen\c{c}a aberta na organiza\c{c}\~ao EXPLORA-PLUS no GitHub\footnote{\url{https://github.com/EXPLORA-PLUS}}, permitindo que outros grupos acad\^emicos, secretarias municipais ou desenvolvedores independentes utilizem, adaptem e ampliem o projeto. Esta transferibilidade amplifica o impacto educacional muito al\'em do grupo original.
+
+No estado atual da entrega, a organiza\c{c}\~ao EXPLORA-PLUS concentra quatro reposit\'orios com pap\'eis bem definidos: \texttt{explora-plus-backend}, \texttt{explora-plus-frontend}, \texttt{explora-plus-docs} e o reposit\'orio \texttt{.github} respons\'avel pelo perfil p\'ublico da organiza\c{c}\~ao. Essa separa\c{c}\~ao melhora a manutenibilidade, facilita a orienta\c{c}\~ao de novos colaboradores e deixa mais clara a fronteira entre aplica\c{c}\~ao, documenta\c{c}\~ao e comunica\c{c}\~ao institucional.
+
+\subsection{Impacto Ambiental}
+
+O Explora+ \'e concebido como um aplicativo de \textbf{rotas pedestres}. Diferente de plataformas que integram taxi, carro por aplicativo ou ve\'iculos pr\'oprios como modal padr\~ao, o Explora+ planeja itiner\'arios que o usu\'ario percorre a p\'e.
+
+Este foco tem um impacto ambiental direto e mensur\'avel: cada quilômetro percorrido a p\'e em vez de carro representa aproximadamente 170\,g de CO$_2$ n\~ao emitidos (considerando a m\'edia de emiss\~ao de ve\'iculos leves no Brasil). Para um turista que visita 5 POIs distribu\'idos em 3\,km de percurso --- cen\'ario t\'ipico no centro hist\'orico de Santos ---, a substitui\c{c}\~ao do deslocamento de carro pelo trajeto a p\'e evita cerca de 500\,g de CO$_2$ por visita.
+
+Ademais, a promos\~ao do turismo pedestre em centros hist\'oricos contribui para a vitalidade urbana: ruas mais movimentadas a p\'e geram maior seguran\c{c}a percebida, maior consumo no com\'ercio local e melhor qualidade de vida para moradores --- um conjunto de externalidades positivas amplamente documentado na literatura de urbanismo.
+
+% -----------------------------------------------------------
+\clearpage
+\section{Diagramas}
+% -----------------------------------------------------------
+
+Esta se\c{c}\~ao apresenta os tr\^es diagramas centrais da arquitetura do Explora+. Diferente da documenta\c{c}\~ao t\'ecnica do projeto, a leitura aqui \'e orientada pelas inova\c{c}\~oes descritas na Se\c{c}\~ao~3 e pelos impactos analisados na Se\c{c}\~ao~4.
+
+Al\'em das exporta\c{c}\~oes em PNG utilizadas neste artigo, o pacote final do projeto UML em Modelio foi versionado no reposit\'orio \texttt{explora-plus-docs}, com nome expl\'icito para facilitar a localiza\c{c}\~ao do artefato completo por docentes e avaliadores\footnote{\url{https://github.com/EXPLORA-PLUS/explora-plus-docs/blob/main/explora-plus-diagramas-uml-modelio-final.zip}}.
+
+\subsection{Arquitetura de Componentes}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{figuras/componentes.png}
+  \caption{Diagrama de componentes da arquitetura Explora+}
+  \label{fig:componentes}
+\end{figure}
+
+O diagrama da Figura~\ref{fig:componentes} evidencia a separa\c{c}\~ao clara entre tr\^es camadas: o frontend m\'ovel (Expo/React Native), o backend Django com seus servi\c{c}os especializados (Geocoding, Routing, Overpass, Wikidata, Wikipedia, MapBuilder) e as fontes de dados externas (Nominatim, OSRM, Overpass API, Wikidata, Wikip\'edia). Nenhuma das fontes externas \'e comercial: todas s\~ao projetos de dados abertos ou APIs p\'ublicas sem custo por requisi\c{c}\~ao.
+
+O componente \texttt{MapBuilder} coordena o pipeline descrito na Se\c{c}\~ao~3.2: recebe os POIs brutos do Overpass, delega o enriquecimento aos servi\c{c}os de Wikidata e Wikip\'edia, e monta o objeto de rota enriquecido que ser\'a persistido no banco de dados e entregue ao frontend.
+
+\subsection{Modelo Entidade-Relacionamento}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth, keepaspectratio]{figuras/er.png}
+  \caption{Diagrama entidade-relacionamento do banco de dados Explora+}
+  \label{fig:er}
+\end{figure}
+
+O modelo da Figura~\ref{fig:er} reflete as inova\c{c}\~oes descritas na Se\c{c}\~ao~3.3. As entidades \texttt{User\-Route\-Search\-Preference} e \texttt{Route\-Search\-Cache} s\~ao o corac\~ao da personaliza\c{c}\~ao: a primeira associa ao usu\'ario autenticado um conjunto de prefer\^encias que determinam os par\^ametros de busca; a segunda armazena rotas calculadas com uma chave can\^onica que incorpora essas prefer\^encias, evitando recalculos desnecess\'arios.
+
+As entidades \texttt{Place} e \texttt{PlaceImage} sustentam o cat\'alogo de POIs curados manualmente, que coexiste com o discovery din\^amico via Overpass. A tabela \texttt{RouteStop} vincula cada parada de uma rota calculada a seu POI correspondente, armazenando o estado de visita\c{c}\~ao (\textit{visited}, \textit{skipped}) para permitir acompanhamento da progress\~ao da rota pelo usu\'ario.
+
+\subsection{Casos de Uso}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[height=0.72\textheight, keepaspectratio]{figuras/casos-de-uso.png}
+  \caption{Diagrama de casos de uso do Explora+}
+  \label{fig:casosdeuso}
+\end{figure}
+
+O diagrama de casos de uso da Figura~\ref{fig:casosdeuso} delimita o escopo de intera\c{c}\~ao do usu\'ario com o sistema. Tr\^es grupos de casos de uso mapeiam diretamente para as inova\c{c}\~oes descritas:
+
+\begin{itemize}
+  \item \textbf{Gerar rota personalizada} encapsula o planner multi-POI com prefer\^encias da Se\c{c}\~ao~3.3;
+  \item \textbf{Visualizar detalhe de POI} exprime o enriquecimento progressivo da Se\c{c}\~ao~3.2;
+  \item \textbf{Configurar prefer\^encias de busca} torna vis\'ivel para o usu\'ario o mecanismo de personaliza\c{c}\~ao que alimenta o cache.
+\end{itemize}
+
+O ator \emph{Sistema Externo} representa o conjunto de APIs abertas (Nominatim, OSRM, Overpass, Wikidata, Wikip\'edia), evidenciando que a maior parte da intelig\^encia do aplicativo reside na integra\c{c}\~ao dessas fontes, n\~ao em dados propriet\'arios.
+
+% -----------------------------------------------------------
+\clearpage
+\section{Organiza\c{c}\~ao para o 8\textordmasculine{} Semestre}
+% -----------------------------------------------------------
+
+O prot\'otipo entregue demonstra a viabilidade t\'ecnica da proposta e valida as hip\'oteses centrais do projeto. Como a avalia\c{c}\~ao recebida foi \textbf{``Bom trabalho''}, sem cr\'iticas ou sugest\~oes espec\'ificas, a organiza\c{c}\~ao deste semestre parte da continuidade do trabalho anterior. As mudan\c{c}as necess\'arias s\~ao delimitar a nova funcionalidade prevista no PCE, explicitar a inova\c{c}\~ao indicada para pesquisa no PCG e definir como essa inova\c{c}\~ao ser\'a experimentada.
+
+\subsection{Nova Funcionalidade Indicada no PCE}
+
+A planilha de alinhamento do grupo indica como nova funcionalidade: \textbf{``Implementa\c{c}\~ao de an\'uncios no aplicativo por meio do Google Ads, criando uma forma simples de monetiza\c{c}\~ao sem alterar as funcionalidades principais do Explora+.''}
+
+Essa funcionalidade se relaciona ao PCE porque trata de evolu\c{c}\~ao pr\'atica do produto. Ela cria uma hip\'otese simples de monetiza\c{c}\~ao, sem exigir mudan\c{c}a no funcionamento central do aplicativo: o usu\'ario continua planejando rotas tur\'isticas, consultando pontos de interesse e usando o mapa como antes. O ponto a observar durante o semestre \'e se os an\'uncios podem ser inseridos sem prejudicar a experi\^encia de navega\c{c}\~ao e sem competir visualmente com as informa\c{c}\~oes tur\'isticas.
+
+\subsection{Inova\c{c}\~ao Indicada no PCG}
+
+Na parte de PCG, a planilha pergunta qual inova\c{c}\~ao ser\'a pesquisada ou sugerida. A resposta registrada define o foco desta entrega: \textbf{``Como inova\c{c}\~ao, prop\~oe-se a integra\c{c}\~ao din\^amica de eventos geolocalizados \`as rotas tur\'isticas.''}
+
+A proposta \'e permitir que o Explora+ identifique eventos que estejam acontecendo, ou pr\'oximos de acontecer, nas regi\~oes percorridas pelo usu\'ario. Diferente de uma lista est\'atica de pontos tur\'isticos, essa inova\c{c}\~ao adiciona o fator tempo \`a experi\^encia: a rota passa a considerar tamb\'em acontecimentos tempor\'arios, como shows, feiras, exposi\c{c}\~oes, festivais, atividades culturais e eventos esportivos.
+
+A planilha tamb\'em registra que esses eventos poderiam ser filtrados por proximidade em rela\c{c}\~ao \`a rota e por compatibilidade de hor\'ario, aparecendo como recomenda\c{c}\~oes adicionais no mapa ou na lista de pontos de interesse. Portanto, a inova\c{c}\~ao a ser pesquisada n\~ao \'e apenas cadastrar eventos, mas avaliar se eventos geolocalizados tornam a rota mais contextual e relevante para o usu\'ario.
+
+\subsection{Estrat\'egia de Experimenta\c{c}\~ao da Primeira Entrega}
+
+A estrat\'egia aprovada na primeira entrega prev\^e comparar a experi\^encia atual do Explora+ com uma experi\^encia enriquecida por eventos geolocalizados. Para manter o escopo controlado, a primeira rodada pode usar eventos reais quando houver fontes p\'ublicas adequadas ou eventos curados manualmente quando a integra\c{c}\~ao externa ainda n\~ao estiver dispon\'ivel.
+
+A compara\c{c}\~ao deve observar tr\^es crit\'erios principais:
+
+\begin{enumerate}
+  \item \textbf{Proximidade geogr\'afica:} verificar se o evento est\'a suficientemente perto da rota para ser recomendado sem gerar desvio excessivo.
+  \item \textbf{Compatibilidade de hor\'ario:} verificar se o evento acontece em uma janela temporal coerente com o hor\'ario previsto da visita.
+  \item \textbf{Relev\^ancia tur\'istica:} verificar se o evento acrescenta valor \`a experi\^encia do usu\'ario, em vez de apenas ocupar espa\c{c}o na interface.
+\end{enumerate}
+
+A Tabela~\ref{tab:experimentacao} organiza os pontos m\'inimos da estrat\'egia.
+
+\begin{table}[H]
+\centering
+\caption{Estrat\'egia de experimenta\c{c}\~ao dos eventos geolocalizados}
+\label{tab:experimentacao}
+\begin{tabular}{p{4.0cm}p{9.0cm}}
+\toprule
+\textbf{Etapa} & \textbf{Descri\c{c}\~ao} \\
+\midrule
+Rota base & Gerar uma rota tur\'istica com o comportamento atual do Explora+, considerando origem, destino, prefer\^encias e POIs permanentes. \\
+Eventos candidatos & Levantar eventos pr\'oximos ao percurso, com nome, localiza\c{c}\~ao, data, hor\'ario, descri\c{c}\~ao, pre\c{c}o quando houver e fonte. \\
+Filtro de localiza\c{c}\~ao & Selecionar apenas eventos pr\'oximos da rota ou que exijam pequeno desvio. \\
+Filtro de hor\'ario & Manter apenas eventos compat\'iveis com o momento prov\'avel da visita. \\
+Avalia\c{c}\~ao & Comparar rota base e rota com eventos, observando utilidade percebida, clareza da recomenda\c{c}\~ao e impacto no percurso. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A estratégia acima é preservada como registro do planejamento aprovado. Nesta etapa, foi realizada a análise documental apresentada na Seção~\ref{sec:analise-documental}. Não foram executadas as etapas de geração comparativa de rotas ou avaliação de utilidade por usuários descritas na Tabela~\ref{tab:experimentacao}; os achados apresentados correspondem ao exame de documentos e código.
+% -----------------------------------------------------------
+\clearpage
+\input{analise-viabilidade}
+
+\clearpage
+\section{Conclusão}
+
+A pesquisa deu continuidade ao trabalho do Explora+ aprovado na primeira entrega do 8º semestre, preservando a reflexão sobre o parecer “Bom trabalho” do 7º semestre e incorporando o registro do conceito “Deferido” emitido em outubro. A funcionalidade de anúncios por Google Ads permanece vinculada ao PCE, enquanto a integração dinâmica de eventos geolocalizados constitui o objeto de pesquisa do PCG.
+
+A análise documental identificou condições técnicas favoráveis para essa integração: representação espacial e temporal parcial no modelo de dados, funções geométricas reutilizáveis e fontes oficiais que descrevem informações de eventos. Identificou também lacunas no acesso e na cobertura das fontes, na estimativa de chegada, no tratamento de sessões e cancelamentos, na atualização do cache e na exposição de informações temporais à interface.
+
+Conclui-se que a inovação é \textbf{tecnicamente viável em nível documental, sob condições de implementação e qualidade dos dados}. Essa conclusão expressa compatibilidade entre requisitos e recursos identificados; não comprova uma integração operacional nem ganhos de utilidade, precisão ou desempenho. A comparação prática de rotas com e sem eventos, prevista na estratégia aprovada, não foi realizada nesta etapa e permanece necessária para a validação experimental da proposta.
+
+Como continuidade, recomenda-se verificar o acesso e a cobertura local de uma fonte, desenvolver um protótipo restrito e executar a comparação previamente definida, registrando desvios de percurso, compatibilidade temporal e percepção de utilidade. Esses resultados permitirão confirmar, restringir ou rever a conclusão documental aqui apresentada.
+% -----------------------------------------------------------
+\clearpage
+\phantomsection
+\printbibliography[heading=bibintoc,title={Refer\^encias}]
+% -----------------------------------------------------------
+
+\end{document}
