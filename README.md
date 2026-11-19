@@ -2,6 +2,12 @@
 
 Repositorio de documentacao, modelagem e artefatos academicos do projeto **Explora+**.
 
+O encerramento do PCE do segundo semestre de 2026 está em
+[`paper-pce-2/`](paper-pce-2/README.md), com o termo preenchido, a consolidação
+das entregas e da pesquisa e o registro de Roseli Fernandes Rocha como Product
+Owner desde 01/10/2026, para aceite acadêmico. Os documentos anteriores mantêm
+o histórico de sua época.
+
 Este repositorio nao contem a aplicacao em si. Ele concentra:
 
 - documentacao funcional e tecnica;
